@@ -1,0 +1,4 @@
+spring:
+  airtable:
+    access-token: ACCESS_TOKEN
+    base-id: BASE_ID

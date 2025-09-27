@@ -1,0 +1,41 @@
+/*
+ * Copyright 2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.data.airtable.core;
+
+import org.springframework.data.airtable.core.mapping.Table;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+/**
+ * Contract for operations available for an Airtable table.
+ */
+public interface AirtableOperations {
+    /**
+     * Lists records of a given type one page at a time.
+     *
+     * @param type The type of records to list - must be annotated with the
+     * {@link Table} annotation that specifies the name of the table from which
+     * the records should be fetched.
+     * @param page The page to retrieve.
+     * @param <T> The type of records.
+     *
+     * @return A page of records of the given type.
+     *
+     * @
+     */
+    <T> Page<T> list(Class<T> type, Pageable page);
+}

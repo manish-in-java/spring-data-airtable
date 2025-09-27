@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.core;
+package org.springframework.data.airtable.core.mapping;
 
-import org.springframework.data.domain.Page;
+import java.lang.annotation.*;
 
 /**
- * Contract for operations available for an Airtable table.
+ * A field in an Airtable table.
  */
-public interface AirtableOperations {
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD })
+public @interface Field {
     /**
-     * Lists records of a given type.
+     * The field name.
      *
-     * @param type The type of records to list.
-     * @param <T> A type of records.
-     *
-     * @return A page of records of the given type.
+     * @return The field name.
      */
-    <T> Page<T> list(Class<T> type);
+    String name() default "";
 }

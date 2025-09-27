@@ -18,6 +18,7 @@ package org.springframework.data.airtable.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.Repository;
 
 /**
@@ -27,9 +28,12 @@ import org.springframework.data.repository.Repository;
  *
  * @see <a href="https://www.airtable.com" title="Airtable">Airtable</a>
  */
-public interface AirtableRepository<T, ID> extends Repository<T, ID> {
+@NoRepositoryBean
+public interface AirtableRepository<T> extends Repository<T, String> {
     /**
-     * Finds a page of records in a table.
+     * Finds a page of records in a table. Airtable returns one page of records
+     * at a time. Each page can contain a specified number of records, which
+     * must be equal to or less than 100.
      *
      * @param pageable The page of records to find.
      *

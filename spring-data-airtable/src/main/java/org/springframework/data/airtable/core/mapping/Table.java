@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.core;
+package org.springframework.data.airtable.core.mapping;
 
-import org.springframework.beans.factory.BeanFactoryAware;
+import java.lang.annotation.*;
 
-public final class AirtableTemplate
-        implements AirtableOperations, BeanFactoryAware {
+/**
+ * An Airtable table.
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD })
+public @interface Table {
+    /**
+     * The table name.
+     *
+     * @return The table name.
+     */
+    String name() default "";
 }

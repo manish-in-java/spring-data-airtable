@@ -17,23 +17,23 @@
 package org.springframework.data.airtable.core;
 
 /**
- * A connection for accessing an Airtable base (short for "database") using
+ * Settings for accessing an Airtable base (short for "database") using
  * Airtable APIs.
  */
-public class Connection {
+public class AirtableSettings {
     private final String accessToken;
 
     private final String baseId;
 
     /**
-     * Creates a connection for an Airtable base.
+     * Creates settings for an Airtable base.
      *
      * @param baseId The unique identifier of the base to access - must not be
      * blank.
      * @param accessToken The access token for invoking the Airtable APIs - must
      * not be blank.
      */
-    public Connection(final String baseId, final String accessToken) {
+    public AirtableSettings(final String baseId, final String accessToken) {
         this.accessToken = accessToken;
         this.baseId = baseId;
     }

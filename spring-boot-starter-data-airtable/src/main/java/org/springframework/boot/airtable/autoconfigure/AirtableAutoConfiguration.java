@@ -4,12 +4,30 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.airtable.core.Connection;
+import org.springframework.data.airtable.core.AirtableSettings;
 
 /**
- * Automatically configures Airtable if the relevant settings are included in
+ * <p>
+ * Automatically configures Airtable if the relevant properties are included in
  * the Spring Boot application configuration file {@code application.properties}
  * or {@code application.yml}.
+ * </p>
+ *
+ * <pre>{@code
+ * application.properties
+ * -----------------------------------------------------------------------------
+ * spring.airtable.base-id=
+ * spring.airtable.access-token=
+ * }</pre>
+ *
+ * <pre>{@code
+ * application.yml
+ * -----------------------------------------------------------------------------
+ * spring:
+ *      airtable:
+ *          base-id:
+ *          access-token:
+ * }</pre>
  */
 @ConditionalOnProperty(
     prefix = "spring.airtable",
@@ -24,18 +42,16 @@ import org.springframework.data.airtable.core.Connection;
 )
 class AirtableAutoConfiguration {
     /**
-     * Creates an Airtable connection using settings available from the
-     * application configuration file.
+     * Creates Airtable settings using properties available from the application
+     * configuration file.
      *
      * @param baseId The unique identifier of the Airtable base to connect to.
      * @param accessToken The access token to use for invoking the Airtable
      * APIs to access the base.
      */
     @Bean
-    Connection connection(
-        @Value("${spring.airtable.base-id}") final String baseId
-        , @Value("${spring.airtable.access-token}") final String accessToken
-                         ) {
-        return new Connection(baseId, accessToken);
+    AirtableSettings settings(@Value("${spring.airtable.base-id}") final String baseId
+        , @Value("${spring.airtable.access-token}") final String accessToken) {
+        return new AirtableSettings(baseId, accessToken);
     }
 }

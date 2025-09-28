@@ -24,6 +24,17 @@ import org.springframework.data.domain.Pageable;
 
 public final class AirtableTemplate
     implements AirtableOperations, BeanFactoryAware {
+    private final AirtableSettings connection;
+
+    /**
+     * Creates a template using a connection for the
+     *
+     * @param connection
+     */
+    public AirtableTemplate(final AirtableSettings connection) {
+        this.connection = connection;
+    }
+
     /**
      * {@inheritDoc}
      */

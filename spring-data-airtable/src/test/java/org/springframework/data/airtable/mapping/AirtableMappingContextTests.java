@@ -18,7 +18,7 @@ package org.springframework.data.airtable.mapping;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.annotation.Id;
+import org.springframework.data.airtable.domain.Gamma;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Unit tests for {@link AirtableMappingContext}.
  */
 public class AirtableMappingContextTests {
-    private AirtablePersistentEntity<Bar> entity;
+    private AirtablePersistentEntity<Gamma> entity;
 
     private AirtablePersistentProperty property;
 
@@ -41,13 +41,13 @@ public class AirtableMappingContextTests {
      */
     @BeforeEach
     public void setup() throws NoSuchFieldException {
-        final var holder = new SimpleTypeHolder(Set.of(Bar.class), true);
+        final var holder = new SimpleTypeHolder(Set.of(Gamma.class), true);
 
         final var subject = new AirtableMappingContext();
 
-        entity = subject.createPersistentEntity(TypeInformation.of(Bar.class));
+        entity = subject.createPersistentEntity(TypeInformation.of(Gamma.class));
 
-        property = subject.createPersistentProperty(Property.of(entity.getTypeInformation(), Bar.class.getDeclaredField("baz"))
+        property = subject.createPersistentProperty(Property.of(entity.getTypeInformation(), Gamma.class.getDeclaredField("baz"))
             , entity
             , holder);
     }
@@ -60,7 +60,7 @@ public class AirtableMappingContextTests {
     public void testCreatePersistentEntity() {
         assertNotNull(entity);
         assertNotNull(entity.getType());
-        assertEquals(Bar.class, entity.getType());
+        assertEquals(Gamma.class, entity.getType());
     }
 
     /**
@@ -71,16 +71,4 @@ public class AirtableMappingContextTests {
     public void testCreatePersistentProperty() {
         assertNotNull(property);
     }
-}
-
-/**
- * A domain entity.
- */
-@Table
-class Bar {
-    @Column
-    private String baz;
-
-    @Id
-    private String id;
 }

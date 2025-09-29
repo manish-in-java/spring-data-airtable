@@ -28,6 +28,8 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 class SimpleAirtablePersistentProperty
     extends AnnotationBasedPersistentProperty<AirtablePersistentProperty>
     implements AirtablePersistentProperty {
+    private final String columnName;
+
     /**
      * Creates metadata for a persistent property.
      *
@@ -43,14 +45,16 @@ class SimpleAirtablePersistentProperty
         , final PersistentEntity<?, AirtablePersistentProperty> owner
         , final SimpleTypeHolder simpleTypeHolder) {
         super(property, owner, simpleTypeHolder);
+
+        this.columnName = extractColumnName(property);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Column getColumn() {
-        return getField().getAnnotation(Column.class);
+    public String getColumnName() {
+        return  columnName;
     }
 
     /**
@@ -59,5 +63,41 @@ class SimpleAirtablePersistentProperty
     @Override
     protected Association<AirtablePersistentProperty> createAssociation() {
         return null;
+    }
+
+    /**
+     * <p>
+     * Derives the name of the Airtable table column to which the property
+     * must be persisted.
+     * </p>
+     *
+     * <ul>
+     *      <li>First, the {@link Column} annotation on the property is checked
+     *      to see if {@link Column#name()} has been specified. If yes, the
+     *      specified name is used.</li>
+     *      <li>If the name has not been specified, the simple name of the
+     *      property is used. For example, the column name for an entity field
+     *      named {@code name} will be considered to be {@code name}
+     *      (all lowercase).</li>
+     * </ul>
+     *
+     * @param property Metadata about the property for which the column name is
+     * required.
+     *
+     * @return The name of the Airtable column to which the property must be
+     * persisted.
+     */
+    private String extractColumnName(final Property property) {
+        final var column = getField().getAnnotation(Column.class);
+
+        if (column == null) {
+            return null;
+        }
+
+        return !column.name().isBlank()
+               // Return the column specified through the annotation.
+               ? column.name().trim()
+               // Otherwise, return the property name.
+               : property.getName();
     }
 }

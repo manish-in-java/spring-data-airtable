@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.mapping;
+package org.springframework.data.airtable.domain;
 
-import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.airtable.mapping.Column;
+import org.springframework.data.airtable.mapping.Table;
+import org.springframework.data.annotation.Id;
 
 /**
- * Contract for a Java property that can be persisted to an Airtable table.
+ * A domain entity mapped to an Airtable table with name defined explicitly.
  */
-public interface AirtablePersistentProperty extends PersistentProperty<AirtablePersistentProperty> {
-    /**
-     * Gets the name of the Airtable column to which property value should be
-     * persisted.
-     *
-     * @return The name of the Airtable table to which property value should be
-     * persisted.
-     */
-    String getColumnName();
+@Table(name = "Gamma")
+public class Gamma {
+    @Column
+    private String baz;
+
+    @Id
+    private String id;
 }

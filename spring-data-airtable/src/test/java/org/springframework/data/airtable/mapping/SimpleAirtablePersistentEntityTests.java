@@ -17,6 +17,9 @@
 package org.springframework.data.airtable.mapping;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.data.airtable.domain.Alpha;
+import org.springframework.data.airtable.domain.Beta;
+import org.springframework.data.airtable.domain.Gamma;
 import org.springframework.data.util.TypeInformation;
 
 import java.util.Locale;
@@ -74,22 +77,3 @@ public class SimpleAirtablePersistentEntityTests {
     }
 }
 
-/**
- * A domain entity not mapped to any Airtable table.
- */
-class Alpha {
-}
-
-/**
- * A domain entity mapped to an Airtable table with name determined implicitly.
- */
-@Table
-class Beta {
-}
-
-/**
- * A domain entity mapped to an Airtable table with name defined explicitly.
- */
-@Table(name = "Gamma")
-class Gamma {
-}

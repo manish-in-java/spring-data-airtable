@@ -56,14 +56,15 @@ class SimpleAirtablePersistentEntity<T>
      * Derives the name of the Airtable table to which the entity instances
      * must be persisted.
      * </p>
+     *
      * <ul>
-     * <li>First, the {@link Table} annotation on the entity class is checked
-     * to see if {@link Table#name()} has been specified. If yes, the specified
-     * name is used.</li>
-     * <li>If the name has not been specified, the simple name of the entity
-     * class is used. For example, the data stream name for an entity class
-     * named {@code Person} will be considered to be {@code person}
-     * (all lowercase).</li>
+     *      <li>First, the {@link Table} annotation on the entity class is
+     *      checked to see if {@link Table#name()} has been specified. If yes,
+     *      the specified name is used.</li>
+     *      <li>If the name has not been specified, the simple name of the
+     *      entity class is used. For example, the table name for an entity
+     *      class named {@code Person} will be considered to be {@code person}
+     *      (all lowercase).</li>
      * </ul>
      *
      * @param typeInformation Metadata about the entity class for which the
@@ -82,7 +83,7 @@ class SimpleAirtablePersistentEntity<T>
         }
 
         return !table.name().isBlank()
-               // Return the stream name specified through the annotation.
+               // Return the table name specified through the annotation.
                ? table.name().trim()
                // Otherwise, return the lowercase version of the entity class's
                // simple name.

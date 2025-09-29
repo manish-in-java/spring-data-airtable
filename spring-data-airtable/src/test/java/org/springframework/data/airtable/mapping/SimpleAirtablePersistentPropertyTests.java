@@ -18,6 +18,7 @@ package org.springframework.data.airtable.mapping;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.airtable.domain.Beta;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for {@link SimpleAirtablePersistentProperty}.
  */
 public class SimpleAirtablePersistentPropertyTests {
-    private AirtablePersistentEntity<Foo> entity;
+    private AirtablePersistentEntity<Beta> entity;
 
     private SimpleTypeHolder holder;
 
@@ -41,11 +42,11 @@ public class SimpleAirtablePersistentPropertyTests {
      */
     @BeforeEach
     public void setup() throws NoSuchFieldException {
-        entity = new SimpleAirtablePersistentEntity<>(TypeInformation.of(Foo.class));
+        entity = new SimpleAirtablePersistentEntity<>(TypeInformation.of(Beta.class));
 
-        holder = new SimpleTypeHolder(Set.of(Foo.class), true);
+        holder = new SimpleTypeHolder(Set.of(Beta.class), true);
 
-        property = Property.of(entity.getTypeInformation(), Foo.class.getDeclaredField("bar"));
+        property = Property.of(entity.getTypeInformation(), Beta.class.getDeclaredField("bar"));
     }
 
     /**
@@ -61,7 +62,7 @@ public class SimpleAirtablePersistentPropertyTests {
      */
     @Test
     public void testGetColumn() {
-        assertNotNull(getProperty().getColumn());
+        assertNotNull(getProperty().getColumnName());
     }
 
     /**
@@ -78,13 +79,4 @@ public class SimpleAirtablePersistentPropertyTests {
     private SimpleAirtablePersistentProperty getProperty() {
         return new SimpleAirtablePersistentProperty(property, entity, holder);
     }
-}
-
-/**
- * A domain entity.
- */
-@Table(name = "Foo")
-class Foo {
-    @Column(name = "bar")
-    private String bar;
 }

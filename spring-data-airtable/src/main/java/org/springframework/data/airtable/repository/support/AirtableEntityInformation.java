@@ -20,10 +20,10 @@ import org.springframework.data.airtable.mapping.AirtablePersistentEntity;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
 
 /**
- * A {@link PersistentEntityInformation} that uses an
- * {@link AirtablePersistentEntity}.
+ * Provides metadata for an entity class that can be persisted to an Airtable
+ * table.
  *
- * @param <T>
+ * @param <T> The type of entity class.
  */
 final class AirtableEntityInformation<T> extends PersistentEntityInformation<T, String> {
     private final AirtablePersistentEntity<T> persistentEntity;
@@ -37,5 +37,16 @@ final class AirtableEntityInformation<T> extends PersistentEntityInformation<T, 
         super(persistentEntity);
 
         this.persistentEntity = persistentEntity;
+    }
+
+    /**
+     * Gets the name of identifier of the Airtable table to which instances of
+     * this entity should be persisted.
+     *
+     * @return The name or identifier of the Airtable table to which instances
+     * of this entity should be persisted.
+     */
+    public String getTableName() {
+        return persistentEntity.getTableName();
     }
 }

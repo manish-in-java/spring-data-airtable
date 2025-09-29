@@ -21,6 +21,47 @@
     <description>Spring Data integration with Airtable</description>
     <url>https://github.com/manish-in-java/spring-data-redis</url>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <!--
+                  Used for running unit and integration tests.
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.plugin.surefire.version}</version>
+                    <configuration>
+                        <failIfNoTests>false</failIfNoTests>
+                        <useSystemClassLoader>false</useSystemClassLoader>
+                    </configuration>
+                </plugin>
+
+                <!--
+                    Provides code coverage while running tests.
+                -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <dependencies>
+        <!--
+            Provides code coverage while running tests.
+        -->
+        <dependency>
+            <groupId>org.jacoco</groupId>
+            <artifactId>org.jacoco.agent</artifactId>
+            <version>${jacoco.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -40,5 +81,12 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <java.version>22</java.version>
+
+        <maven.plugin.surefire.version>3.5.2</maven.plugin.surefire.version>
+
+        <jacoco.version>0.8.12</jacoco.version>
     </properties>
 </project>

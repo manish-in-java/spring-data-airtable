@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.core.mapping;
+package org.springframework.data.airtable.mapping;
 
-import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.MutablePersistentEntity;
-import org.springframework.data.util.TypeInformation;
+import java.lang.annotation.*;
 
-public class AirtablePersistentEntity<T>
-    extends BasicPersistentEntity<T, AirtablePersistentProperty>
-    implements MutablePersistentEntity<T, AirtablePersistentProperty> {
-    public AirtablePersistentEntity(final TypeInformation<T> information) {
-        super(information);
-    }
+/**
+ * A column in an Airtable table.
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD })
+public @interface Column {
+    /**
+     * The column name.
+     *
+     * @return The column name.
+     */
+    String name() default "";
 }

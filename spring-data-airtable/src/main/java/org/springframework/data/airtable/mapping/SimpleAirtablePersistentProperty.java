@@ -14,25 +14,43 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.core.mapping;
+package org.springframework.data.airtable.mapping;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 /**
- * A persistent property in an entity mapped to an Airtable table.
+ * Reads metadata about Java properties to be persisted to Airtable.
  */
-public final class AirtablePersistentProperty
+class SimpleAirtablePersistentProperty
     extends AnnotationBasedPersistentProperty<AirtablePersistentProperty>
-    implements PersistentProperty<AirtablePersistentProperty> {
-    public AirtablePersistentProperty(final Property property
+    implements AirtablePersistentProperty {
+    /**
+     * Creates metadata for a persistent property.
+     *
+     * @param property The persistent property.
+     * @param owner The entity type for the property.
+     * @param simpleTypeHolder Metadata for the entity type.
+     *
+     * @throws IllegalArgumentException if {@code owner} or
+     * {@code simpleTypeHolder} is
+     * {@literal null}.
+     */
+    public SimpleAirtablePersistentProperty(final Property property
         , final PersistentEntity<?, AirtablePersistentProperty> owner
         , final SimpleTypeHolder simpleTypeHolder) {
         super(property, owner, simpleTypeHolder);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Column getColumn() {
+        return getField().getAnnotation(Column.class);
     }
 
     /**

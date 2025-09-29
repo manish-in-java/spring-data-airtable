@@ -16,7 +16,7 @@
 
 package org.springframework.data.airtable.core;
 
-import org.springframework.data.airtable.core.mapping.Table;
+import org.springframework.data.airtable.mapping.Table;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

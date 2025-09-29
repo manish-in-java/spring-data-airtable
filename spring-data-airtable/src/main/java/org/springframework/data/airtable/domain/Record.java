@@ -41,7 +41,8 @@ import static java.util.Collections.unmodifiableMap;
  * }</pre>
  *
  * <p>
- * The table columns are returned in the {@code fields} map.
+ * The table columns are returned in the {@code fields} map with each kep in the
+ * map representing a field in the Airtable record.
  * </p>
  */
 public class Record {

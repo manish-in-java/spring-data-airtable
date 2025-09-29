@@ -16,7 +16,7 @@
 
 package org.springframework.data.airtable.repository.support;
 
-import org.springframework.data.airtable.core.mapping.AirtablePersistentEntity;
+import org.springframework.data.airtable.mapping.AirtablePersistentEntity;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
 
 /**

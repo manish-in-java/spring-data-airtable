@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.core.mapping;
+package org.springframework.data.airtable.mapping;
 
 import java.lang.annotation.*;
 
 /**
- * The identifier field in an Airtable table.
+ * An Airtable table.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD })
-public @interface Id {
+@Target({ ElementType.TYPE })
+public @interface Table {
+    /**
+     * The table name.
+     *
+     * @return The table name.
+     */
+    String name() default "";
 }

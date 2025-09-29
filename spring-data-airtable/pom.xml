@@ -19,6 +19,52 @@
     <name>Spring Data Airtable</name>
     <description>Spring Data module for Airtable</description>
 
+    <build>
+        <plugins>
+            <!--
+              Used for running unit and integration tests.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>${unit-test-agent}</argLine>
+                </configuration>
+            </plugin>
+
+            <!--
+                Provides code coverage while running tests.
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <destFile>${project.reporting.outputDirectory}/coverage.exec</destFile>
+                            <propertyName>unit-test-agent</propertyName>
+                        </configuration>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <id>pre-test</id>
+                    </execution>
+                    <execution>
+                        <configuration>
+                            <dataFile>${project.reporting.outputDirectory}/coverage.exec</dataFile>
+                            <outputDirectory>${project.reporting.outputDirectory}/coverage</outputDirectory>
+                        </configuration>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <id>post-test</id>
+                        <phase>test</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

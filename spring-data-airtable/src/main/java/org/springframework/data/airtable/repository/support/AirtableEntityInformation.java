@@ -25,7 +25,7 @@ import org.springframework.data.repository.core.support.PersistentEntityInformat
  *
  * @param <T> The type of entity class.
  */
-final class AirtableEntityInformation<T> extends PersistentEntityInformation<T, String> {
+public final class AirtableEntityInformation<T> extends PersistentEntityInformation<T, String> {
     private final AirtablePersistentEntity<T> persistentEntity;
 
     /**

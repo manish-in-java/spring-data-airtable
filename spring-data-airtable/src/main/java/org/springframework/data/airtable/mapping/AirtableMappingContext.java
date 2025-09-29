@@ -22,7 +22,8 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 
 /**
- * Generates metadata for persisting domain entities to Airtable tables.
+ * Generates metadata for persisting domain entities to Airtable tables using
+ * metadata available form Java types.
  */
 public class AirtableMappingContext
     extends AbstractMappingContext<AirtablePersistentEntity<?>, AirtablePersistentProperty> {

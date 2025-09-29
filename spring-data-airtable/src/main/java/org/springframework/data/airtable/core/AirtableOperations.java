@@ -17,6 +17,7 @@
 package org.springframework.data.airtable.core;
 
 import org.springframework.data.airtable.mapping.Table;
+import org.springframework.data.airtable.repository.support.AirtableEntityInformation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -37,5 +38,5 @@ public interface AirtableOperations {
      *
      * @
      */
-    <T> Page<T> list(Class<T> type, Pageable page);
+    <T> Page<T> list(AirtableEntityInformation<T> type, Pageable page);
 }

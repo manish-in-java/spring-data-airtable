@@ -32,24 +32,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Unit tests for {@link AirtableMappingContext}.
  */
 public class AirtableMappingContextTests {
-    private AirtablePersistentEntity<Gamma> entity;
+    private SimpleTypeHolder holder;
 
-    private AirtablePersistentProperty property;
+    private AirtableMappingContext subject;
 
     /**
      * Sets up objects required to run the tests.
      */
     @BeforeEach
-    public void setup() throws NoSuchFieldException {
-        final var holder = new SimpleTypeHolder(Set.of(Gamma.class), true);
+    public void setup() {
+        holder = new SimpleTypeHolder(Set.of(Gamma.class), true);
 
-        final var subject = new AirtableMappingContext();
-
-        entity = subject.createPersistentEntity(TypeInformation.of(Gamma.class));
-
-        property = subject.createPersistentProperty(Property.of(entity.getTypeInformation(), Gamma.class.getDeclaredField("baz"))
-            , entity
-            , holder);
+        subject = new AirtableMappingContext();
     }
 
     /**
@@ -58,6 +52,8 @@ public class AirtableMappingContextTests {
      */
     @Test
     public void testCreatePersistentEntity() {
+        final var entity = subject.createPersistentEntity(TypeInformation.of(Gamma.class));
+
         assertNotNull(entity);
         assertNotNull(entity.getType());
         assertEquals(Gamma.class, entity.getType());
@@ -68,7 +64,13 @@ public class AirtableMappingContextTests {
      * correctly from its type.
      */
     @Test
-    public void testCreatePersistentProperty() {
+    public void testCreatePersistentProperty() throws NoSuchFieldException {
+        final var entity = subject.createPersistentEntity(TypeInformation.of(Gamma.class));
+
+        final var property = subject.createPersistentProperty(Property.of(entity.getTypeInformation(), Gamma.class.getDeclaredField("baz"))
+            , entity
+            , holder);
+
         assertNotNull(property);
     }
 }

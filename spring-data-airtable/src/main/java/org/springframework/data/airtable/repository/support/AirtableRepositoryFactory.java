@@ -17,6 +17,8 @@
 package org.springframework.data.airtable.repository.support;
 
 import org.springframework.data.airtable.core.AirtableOperations;
+import org.springframework.data.airtable.mapping.AirtableMappingContext;
+import org.springframework.data.airtable.repository.AirtableEntityInformationProvider;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -26,6 +28,8 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
  * Factory for Airtable repositories.
  */
 final class AirtableRepositoryFactory extends RepositoryFactorySupport {
+    private final AirtableEntityInformationProvider entityInformationProvider;
+
     private final AirtableOperations operations;
 
     /**
@@ -35,18 +39,29 @@ final class AirtableRepositoryFactory extends RepositoryFactorySupport {
      */
     AirtableRepositoryFactory(final AirtableOperations operations) {
         this.operations = operations;
+
+        this.entityInformationProvider = new AirtableMappingContextEntityInformationProvider(new AirtableMappingContext());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T, ID> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
+        return (EntityInformation<T, ID>) entityInformationProvider.getEntityInformation(domainClass);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Class<?> getRepositoryBaseClass(final RepositoryMetadata metadata) {
+        return null;
     }
 
     @Override
-    public <T, ID> EntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
-        return null;
-    }
-    @Override
     protected Object getTargetRepository(final RepositoryInformation metadata) {
-        return null;
-    }
-    @Override
-    protected Class<?> getRepositoryBaseClass(final RepositoryMetadata metadata) {
         return null;
     }
 }

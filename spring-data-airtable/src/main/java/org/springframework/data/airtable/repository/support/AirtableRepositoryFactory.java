@@ -24,6 +24,8 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 
+import static org.springframework.util.Assert.notNull;
+
 /**
  * Factory for Airtable repositories.
  */
@@ -38,6 +40,8 @@ final class AirtableRepositoryFactory extends RepositoryFactorySupport {
      * @param operations Core operations wrapped by the repositories to create.
      */
     AirtableRepositoryFactory(final AirtableOperations operations) {
+        notNull(operations, "AirtableOperations must not be null!");
+
         this.operations = operations;
 
         this.entityInformationProvider = new AirtableMappingContextEntityInformationProvider(new AirtableMappingContext());
@@ -57,11 +61,14 @@ final class AirtableRepositoryFactory extends RepositoryFactorySupport {
      */
     @Override
     protected Class<?> getRepositoryBaseClass(final RepositoryMetadata metadata) {
-        return null;
+        return SimpleAirtableRepository.class;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected Object getTargetRepository(final RepositoryInformation metadata) {
-        return null;
+        return getTargetRepositoryViaReflection(metadata, getEntityInformation(metadata.getDomainType()), operations);
     }
 }

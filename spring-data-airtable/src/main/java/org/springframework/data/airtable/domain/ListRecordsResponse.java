@@ -32,6 +32,16 @@ public class ListRecordsResponse {
     private List<Record> records;
 
     /**
+     * Gets an optional offset to use for fetching the next page of records
+     * from the API - received only if the next page is available.
+     *
+     * @return An optional offset to use for fetching the next page of records.
+     */
+    public String getOffset() {
+        return offset;
+    }
+
+    /**
      * Gets records received from Airtable.
      *
      * @return Records received from Airtable.

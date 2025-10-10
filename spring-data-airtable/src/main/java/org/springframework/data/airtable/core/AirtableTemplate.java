@@ -29,7 +29,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PreferredConstructor;
-import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mapping.model.PreferredConstructorDiscoverer;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
@@ -64,6 +63,8 @@ public final class AirtableTemplate implements AirtableOperations {
     private static final Logger LOGGER = LoggerFactory.getLogger(AirtableTemplate.class);
 
     private static final AirtableMappingContext MAPPING_CONTEXT = new AirtableMappingContext();
+
+    private static final ConcurrentMap<String, String> RECORD_OFFSETS = new ConcurrentHashMap<>();
 
     private final AirtableSettings settings;
 
@@ -104,13 +105,48 @@ public final class AirtableTemplate implements AirtableOperations {
             throw new MappingException("Unmapped type " + entity.getJavaType().getName() + ".");
         }
 
+        String offset = "";
+        if (page.getPageNumber() != 0) {
+            // The request is not for the first page. The Airtable List Records
+            // API does not accept arbitrary page numbers. Instead, where
+            // pagination is possible, the API returns an offset in the response
+            // to fetch the next page.
+            //
+            // We need to check if the previous page was fetched earlier and
+            // if the offset for the requested page is available.
+            final var key = getPageOffsetKey(type, page.getPageNumber());
+
+            if (!RECORD_OFFSETS.containsKey(key)) {
+                throw new IllegalStateException("Page number "
+                                                    + page.getPageNumber()
+                                                    + " cannot be fetched for"
+                                                    + " type"
+                                                    + entity.getJavaType().getName()
+                                                    + " because the Airtable "
+                                                    + " record offset for that"
+                                                    + " page number is"
+                                                    + " unavailable.");
+            }
+
+            offset = RECORD_OFFSETS.get(key);
+        }
+
         // Determine the mapping metadata for the entity.
         final var metadata = getEntityMappingData(type);
         final var id = metadata.getIdProperty();
         final var mappings = metadata.getFieldMappings();
 
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Invoking Airtable List Records API for table name {}."
+                , entity.getTableName());
+        }
+
         // Invoke the Airtable List Records API.
-        final var response = get(getEndpoint(entity.getTableName()), ListRecordsResponse.class).getBody();
+        final var parameters = Map.of("pageSize", page.getPageSize()
+            , "offset", offset);
+        final var response = get(getEndpoint(entity.getTableName())
+            , parameters
+            , ListRecordsResponse.class).getBody();
 
         // Extract records from the response.
         final var records = response.getRecords();
@@ -148,38 +184,18 @@ public final class AirtableTemplate implements AirtableOperations {
                 entities.add(instance);
             }
 
+            if (response.getOffset() != null
+                && !response.getOffset().isBlank()) {
+                // Store the offset for fetching the next page of records.
+                synchronized (RECORD_OFFSETS) {
+                    RECORD_OFFSETS.put(getPageOffsetKey(type, page.getPageNumber() + 1), response.getOffset());
+                }
+            }
+
             return new PageImpl<>(entities);
         }
         catch (final IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Creates a new instance of a given entity type.
-     *
-     * @param entity The type of entity for which the instance should be
-     * created.
-     * @param <T> The type of entity for which the instance should be created.
-     *
-     * @return A new entity instance if the entity is mapped correctly and has
-     * a valid constructor.
-     *
-     * @throws MappingException if the entity is not mapped correctly or does
-     * not have a valid constructor.
-     * @throws MappingInstantiationException if there is an error while creating
-     * a new entity instance.
-     */
-    private <T> T createInstance(final AirtablePersistentEntity<T> entity) {
-        // Get the constructor to use for creating new instances of the entity.
-        final var constructor = getEntityMappingData(entity).getPreferredConstructor();
-
-        // Create a new entity instance.
-        try {
-            return (T) constructor.getConstructor().newInstance();
-        }
-        catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new MappingInstantiationException(entity, Collections.emptyList(), e);
         }
     }
 
@@ -218,22 +234,11 @@ public final class AirtableTemplate implements AirtableOperations {
     }
 
     /**
-     * Performs an HTTP GET request and returns the response received as an
-     * array of bytes.
-     *
-     * @param url The URL to invoke.
-     *
-     * @return Response from the URL as a byte array.
-     */
-    private byte[] get(final String url) {
-        return get(url, byte[].class).getBody();
-    }
-
-    /**
      * Performs an HTTP GET request and returns the response received as a
      * result of the request.
      *
      * @param url The URL to invoke.
+     * @param parameters Parameters to include in the request URL.
      * @param responseType The type of response expected from the URL if it
      * completes successfully.
      * @param <R> The type of response to return.
@@ -241,51 +246,14 @@ public final class AirtableTemplate implements AirtableOperations {
      * @return Response from the URL.
      */
     private <R> ResponseEntity<R> get(final String url
-        , final Class<R> responseType) {
-        return get(url, null, responseType);
-    }
-
-    /**
-     * Performs an HTTP GET request and returns the response received as a
-     * result of the request.
-     *
-     * @param url The URL to invoke.
-     * @param body Optional body to include with the request.
-     * @param responseType The type of response expected from the URL if it
-     * completes successfully.
-     * @param <R> The type of response to return.
-     *
-     * @return Response from the URL.
-     */
-    private <Q, R> ResponseEntity<R> get(final String url
-        , final Q body
-        , final Class<R> responseType) {
-        return exchange(GET, url, body, responseType);
-    }
-
-    /**
-     * Performs an HTTP GET request and returns the response received as a
-     * result of the request.
-     *
-     * @param url The URL to invoke.
-     * @param request Parameters to include in the request URL.
-     * @param responseType The type of response expected from the URL if it
-     * completes successfully.
-     * @param <R> The type of response to return.
-     *
-     * @return Response from the URL.
-     */
-    private <R> ResponseEntity<R> get(final String url
-        , final ParameterizedRequest request
+        , final Map<String, ?> parameters
         , final Class<R> responseType) {
         final var urlBuilder = UriComponentsBuilder.fromHttpUrl(url);
 
-        final Map<String, ?> parameters = Optional.ofNullable(request)
-                                                  .map(ParameterizedRequest::getParameters)
-                                                  .orElseGet(Collections::emptyMap);
-
-        parameters.keySet()
-                  .forEach(param -> urlBuilder.queryParam(param, format("{%s}", param)));
+        Optional.ofNullable(parameters)
+                .orElseGet(Collections::emptyMap)
+                .keySet()
+                .forEach(param -> urlBuilder.queryParam(param, format("{%s}", param)));
 
         final var urlTemplate = urlBuilder.encode().toUriString();
 
@@ -425,6 +393,22 @@ public final class AirtableTemplate implements AirtableOperations {
         }
 
         return ENTITY_FIELD_MAPPINGS.get(entity);
+    }
+
+    /**
+     * Gets the key to use as lookup for fetching a particular page of records
+     * for a given entity.
+     *
+     * @param entity An entity.
+     * @param page The page number to fetch.
+     *
+     * @return The lookup key to use for the page if available.
+     */
+    private String getPageOffsetKey(final AirtablePersistentEntity<?> entity, final int page) {
+        return String.format("%s-%s-%d"
+            , settings.getBaseId()
+            , entity.getTableName()
+            , page);
     }
 
     /**
@@ -638,20 +622,6 @@ public final class AirtableTemplate implements AirtableOperations {
         headers.add(CONTENT_TYPE, APPLICATION_JSON_VALUE);                                                              // Content-Type: application/json
 
         return headers;
-    }
-
-    /**
-     * Contract for a request containing parameters to be included in the
-     * request URL.
-     */
-    public interface ParameterizedRequest {
-        /**
-         * Gets parameters to included in the request URL.
-         *
-         * @return A map containing the parameters to include as key-value
-         * pairs.
-         */
-        Map<String, ?> getParameters();
     }
 
     /**

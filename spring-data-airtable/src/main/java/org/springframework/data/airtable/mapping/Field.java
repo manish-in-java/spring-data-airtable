@@ -19,16 +19,16 @@ package org.springframework.data.airtable.mapping;
 import java.lang.annotation.*;
 
 /**
- * A column in an Airtable table.
+ * A field in an Airtable table.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-public @interface Column {
+public @interface Field {
     /**
-     * The column name.
+     * The field name.
      *
-     * @return The column name.
+     * @return The field name.
      */
     String name() default "";
 }

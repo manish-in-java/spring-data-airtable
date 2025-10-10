@@ -13,7 +13,7 @@ class AirtableApplication {
      *
      * @param args Command-line arguments passed to the program.
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SpringApplication.run(AirtableApplication.class, args);
     }
 }

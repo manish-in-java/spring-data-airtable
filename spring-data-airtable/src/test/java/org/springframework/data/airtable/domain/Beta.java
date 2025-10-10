@@ -16,7 +16,7 @@
 
 package org.springframework.data.airtable.domain;
 
-import org.springframework.data.airtable.mapping.Column;
+import org.springframework.data.airtable.mapping.Field;
 import org.springframework.data.airtable.mapping.Table;
 
 /**
@@ -24,6 +24,6 @@ import org.springframework.data.airtable.mapping.Table;
  */
 @Table
 public class Beta {
-    @Column(name = "bar")
+    @Field(name = "bar")
     private String bar;
 }

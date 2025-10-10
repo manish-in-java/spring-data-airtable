@@ -1,4 +1,4 @@
 spring:
-  airtable:
-    access-token: ACCESS_TOKEN
-    base-id: BASE_ID
+    airtable:
+        access-token: ${SPRING_DATA_AIRTABLE_ACCESS_TOKEN:ACCESS_TOKEN}
+        base-id: ${SPRING_DATA_AIRTABLE_BASE_ID:BASE_ID}

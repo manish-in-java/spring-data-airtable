@@ -39,20 +39,54 @@
                 </plugin>
 
                 <!--
-                    Provides code coverage while running tests.
+                    Provides code coverage for tests.
                 -->
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco.version}</version>
                 </plugin>
+
+                <!--
+                    Runs Spring Boot applications.
+                -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${project.version}</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>
 
+    <dependencyManagement>
+        <dependencies>
+            <!--
+                Provides logging.
+            -->
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <!--
-            Provides code coverage while running tests.
+            Provides logging.
+        -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <!--
+            Provides code coverage for tests.
         -->
         <dependency>
             <groupId>org.jacoco</groupId>
@@ -77,6 +111,7 @@
     <modules>
         <module>spring-data-airtable</module>
         <module>spring-boot-starter-data-airtable</module>
+        <module>spring-data-airtable-example</module>
     </modules>
 
     <properties>
@@ -88,5 +123,6 @@
         <maven.plugin.surefire.version>3.5.2</maven.plugin.surefire.version>
 
         <jacoco.version>0.8.12</jacoco.version>
+        <logback.version>1.5.18</logback.version>
     </properties>
 </project>

@@ -14,10 +14,10 @@
     </parent>
 
     <groupId>org.springframework.data</groupId>
-    <artifactId>spring-data-airtable</artifactId>
+    <artifactId>spring-data-airtable-example</artifactId>
 
-    <name>Spring Data Airtable</name>
-    <description>Spring Data module for Airtable</description>
+    <name>Spring Data Airtable Example</name>
+    <description>Spring Data module for Airtable example</description>
 
     <build>
         <plugins>
@@ -41,7 +41,7 @@
                 <executions>
                     <execution>
                         <configuration>
-                            <destFile>${project.reporting.outputDirectory}/coverage.exec</destFile>
+                            <destFile>${project.build.directory}/coverage-reports/jacoco/coverage.exec</destFile>
                             <propertyName>unit-test-agent</propertyName>
                         </configuration>
                         <goals>
@@ -51,8 +51,8 @@
                     </execution>
                     <execution>
                         <configuration>
-                            <dataFile>${project.reporting.outputDirectory}/coverage.exec</dataFile>
-                            <outputDirectory>${project.reporting.outputDirectory}/coverage</outputDirectory>
+                            <dataFile>${project.build.directory}/coverage-reports/jacoco/coverage.exec</dataFile>
+                            <outputDirectory>${project.reporting.outputDirectory}/jacoco/coverage</outputDirectory>
                         </configuration>
                         <goals>
                             <goal>report</goal>
@@ -62,31 +62,39 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!--
+                Runs Spring Boot applications.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
     <dependencies>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <version>${spring}</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>${spring}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
+            <artifactId>spring-data-airtable</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-airtable</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

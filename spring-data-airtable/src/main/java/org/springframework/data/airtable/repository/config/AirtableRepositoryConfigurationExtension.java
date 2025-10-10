@@ -35,8 +35,8 @@ import java.util.Collections;
 public class AirtableRepositoryConfigurationExtension extends RepositoryConfigurationExtensionSupport {
     /**
      * {@inheritDoc}
-     */
     @Override
+     */
     public String getModuleName() {
         return "Airtable";
     }
@@ -62,7 +62,7 @@ public class AirtableRepositoryConfigurationExtension extends RepositoryConfigur
      */
     @Override
     public void postProcess(final BeanDefinitionBuilder builder, final AnnotationRepositoryConfigurationSource config) {
-        builder.addPropertyReference("airtableTemplate", "airtableTemplate");
+        builder.addPropertyReference("airtableOperations", "airtableOperations");
     }
 
     /**
@@ -70,7 +70,7 @@ public class AirtableRepositoryConfigurationExtension extends RepositoryConfigur
      */
     @Override
     public void postProcess(final BeanDefinitionBuilder builder, final XmlRepositoryConfigurationSource config) {
-        builder.addPropertyReference("airtableTemplate", config.getElement().getAttribute("airtable-template-ref"));
+        builder.addPropertyReference("airtableOperations", config.getElement().getAttribute("airtable-operations-ref"));
     }
 
     /**

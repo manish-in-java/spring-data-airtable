@@ -14,27 +14,31 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.core;
+package org.springframework.data.airtable.example.service;
 
-import org.springframework.data.airtable.mapping.Table;
-import org.springframework.data.airtable.repository.support.AirtableEntityInformation;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.airtable.example.entity.Pet;
+import org.springframework.data.airtable.example.repository.PetRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 /**
- * Contract for operations available for an Airtable table.
+ * Provides business operations for pets.
  */
-public interface AirtableOperations {
+@Service
+public class PetService {
+    @Autowired
+    private PetRepository repository;
+
     /**
-     * Lists records of a given type one page at a time.
+     * Gets a page of pets.
      *
-     * @param entity The type of records to list - must be annotated with the
-     * {@link Table} annotation that specifies the name of the table from which
-     * the records should be fetched.
-     * @param page The page to retrieve.
-     * @param <T> The type of records.
+     * @param page The page to find.
      *
-     * @return A page of records of the given type.
+     * @return A page of pets.
      */
-    <T> Page<T> list(AirtableEntityInformation<T> entity, Pageable page);
+    public Page<Pet> getPets(final Pageable page) {
+        return repository.findAll(page);
+    }
 }

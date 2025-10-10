@@ -16,12 +16,21 @@
 
 package org.springframework.data.airtable.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.airtable.domain.ListRecordsResponse;
+import org.springframework.data.airtable.mapping.*;
 import org.springframework.data.airtable.repository.support.AirtableEntityInformation;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PreferredConstructor;
+import org.springframework.data.mapping.model.MappingInstantiationException;
+import org.springframework.data.mapping.model.PreferredConstructorDiscoverer;
 import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.util.LinkedMultiValueMap;
@@ -34,19 +43,27 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
 import static org.springframework.http.HttpHeaders.*;
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+/**
+ * Accesses data in an Airtable table using the Airtable Web API.
+ */
 public final class AirtableTemplate implements AirtableOperations {
-    private static final String BASE_URL = "https://api.airtable.com/v0";
+    private static final String AIRTABLE_API_URL = "https://api.airtable.com/v0";
+
+    private static final ConcurrentMap<AirtablePersistentEntity<?>, AirtableEntityMappingData> ENTITY_FIELD_MAPPINGS = new ConcurrentHashMap<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AirtableTemplate.class);
+
+    private static final AirtableMappingContext MAPPING_CONTEXT = new AirtableMappingContext();
 
     private final AirtableSettings settings;
 
@@ -60,14 +77,110 @@ public final class AirtableTemplate implements AirtableOperations {
     }
 
     /**
-     * {@inheritDoc}
+     * Lists records of a given type one page at a time.
+     *
+     * @param entity The type of records to list - must be annotated with the
+     * {@link Table} annotation that specifies the name of the table from which
+     * the records should be fetched.
+     * @param page The page to retrieve.
+     * @param <T> The type of records.
+     *
+     * @return A page of records of the given type.
+     *
+     * @throws MappingException if the specified type is not correctly mapped
+     * as an Airtable persistent entity - this is normally done by annotating
+     * the entity class with {@link Table}.
+     * @throws IllegalStateException if the specified type does not have any
+     * field annotated with {@link Id} or if the type does not contain any
+     * field annotated with {@link Field}.
+     * @see <a href="https://airtable.com/developers/web/api/list-records">Airtable List Records API</a>
      */
     @Override
-    public <T> Page<T> list(final AirtableEntityInformation<T> type, final Pageable page) {
-        // Invoke the Airtable List Records API.
-        final var response = get(getEndpoint(type.getTableName()), ListRecordsResponse.class);
+    public <T> Page<T> list(final AirtableEntityInformation<T> entity, final Pageable page) {
+        // Determine the type of entities to return.
+        final var type = MAPPING_CONTEXT.getPersistentEntity(entity.getJavaType());
 
-        return null;
+        if (type == null) {
+            throw new MappingException("Unmapped type " + entity.getJavaType().getName() + ".");
+        }
+
+        // Determine the mapping metadata for the entity.
+        final var metadata = getEntityMappingData(type);
+        final var id = metadata.getIdProperty();
+        final var mappings = metadata.getFieldMappings();
+
+        // Invoke the Airtable List Records API.
+        final var response = get(getEndpoint(entity.getTableName()), ListRecordsResponse.class).getBody();
+
+        // Extract records from the response.
+        final var records = response.getRecords();
+
+        if (records.isEmpty()) {
+            return new PageImpl<>(Collections.emptyList());
+        }
+
+        try {
+            final List<T> entities = new ArrayList<>();
+
+            for (final var record : records) {
+                final Map<String, JsonNode> properties = new HashMap<>();
+
+                final var fields = record.getFields();
+
+                if (fields != null && !fields.isEmpty()) {
+                    // Map Airtable field values to Java property values.
+                    for (final var mapping : mappings.entrySet()) {
+                        final var airtableFieldName = mapping.getKey();
+                        final var entityProperty = mapping.getValue();
+
+                        if (fields.containsKey(airtableFieldName)) {
+                            properties.put(entityProperty.getField().getName(), fields.get(airtableFieldName));
+                        }
+                    }
+                }
+
+                // Create an entity instance.
+                final T instance = new ObjectMapper().convertValue(properties, entity.getJavaType());
+
+                // Add record identifier.
+                id.getSetter().invoke(instance, record.getId());
+
+                entities.add(instance);
+            }
+
+            return new PageImpl<>(entities);
+        }
+        catch (final IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates a new instance of a given entity type.
+     *
+     * @param entity The type of entity for which the instance should be
+     * created.
+     * @param <T> The type of entity for which the instance should be created.
+     *
+     * @return A new entity instance if the entity is mapped correctly and has
+     * a valid constructor.
+     *
+     * @throws MappingException if the entity is not mapped correctly or does
+     * not have a valid constructor.
+     * @throws MappingInstantiationException if there is an error while creating
+     * a new entity instance.
+     */
+    private <T> T createInstance(final AirtablePersistentEntity<T> entity) {
+        // Get the constructor to use for creating new instances of the entity.
+        final var constructor = getEntityMappingData(entity).getPreferredConstructor();
+
+        // Create a new entity instance.
+        try {
+            return (T) constructor.getConstructor().newInstance();
+        }
+        catch (final InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new MappingInstantiationException(entity, Collections.emptyList(), e);
+        }
     }
 
     /**
@@ -223,7 +336,183 @@ public final class AirtableTemplate implements AirtableOperations {
      * @return API endpoint for the requested table.
      */
     private String getEndpoint(final String table) {
-        return format("%s/%s/%s", BASE_URL, settings.getBaseId(), table);
+        return format("%s/%s/%s", AIRTABLE_API_URL, settings.getBaseId(), table);
+    }
+
+    /**
+     * Gets mapping metadata for a persistent entity, which includes the
+     * preferred constructor method to use for entity instances, identifier
+     * property and field mappings.
+     *
+     * @param entity The entity type for which the metadata is required.
+     *
+     * @return The metadata for the entity.
+     */
+    private AirtableEntityMappingData getEntityMappingData(final AirtablePersistentEntity<?> entity) {
+        if (!ENTITY_FIELD_MAPPINGS.containsKey(entity)) {
+            synchronized (ENTITY_FIELD_MAPPINGS) {
+                // Find preferred constructor method for the entity.
+                final var preferredConstructor = PreferredConstructorDiscoverer.discover(entity);
+
+                // Ensure that a constructor method is available.
+                if (preferredConstructor == null) {
+                    throw new MappingException("Unmanaged data type " + entity.getName() + ".");
+                }
+
+                // Determine the identifier property for the entity.
+                final var id = entity.getRequiredIdProperty();
+
+                // Ensure that the identifier property is available.
+                if (id.getField() == null) {
+                    throw new IllegalStateException("Type " + entity.getName()
+                                                        + " does not have an"
+                                                        + " identifier field"
+                                                        + " annotated with @Id.");
+                }
+
+                // Ensure that the getter for the identifier property is
+                // available.
+                if (id.getGetter() == null) {
+                    throw new MappingException("Field " + id.getField().getName()
+                                                   + " on type " + entity.getName()
+                                                   + " does not have a"
+                                                   + " publicly-accessible"
+                                                   + " getter method.");
+                }
+
+                // Ensure that the setter for the identifier property is
+                // available.
+                if (id.getSetter() == null) {
+                    throw new MappingException("Field " + id.getField().getName()
+                                                   + " on type " + entity.getName()
+                                                   + " does not have a"
+                                                   + " publicly-accessible"
+                                                   + " setter method.");
+                }
+
+                // Determine property mappings for the entity.
+                final var properties = getPersistentProperties(entity);
+
+                if (properties == null || properties.isEmpty()) {
+                    throw new IllegalStateException("Type " + entity.getName()
+                                                        + " does not have any"
+                                                        + " field annotated"
+                                                        + " with @Field.");
+                }
+
+                for (final var property : properties.values()) {
+                    // Ensure that the getter for the property is available.
+                    if (property.getGetter() == null) {
+                        throw new MappingException("Field " + property.getField().getName()
+                                                       + " on type " + entity.getName()
+                                                       + " does not have a"
+                                                       + " publicly-accessible"
+                                                       + " getter method.");
+                    }
+
+                    // Ensure that the setter for the property is available.
+                    if (property.getSetter() == null) {
+                        throw new MappingException("Field " + property.getField().getName()
+                                                       + " on type " + entity.getName()
+                                                       + " does not have a"
+                                                       + " publicly-accessible"
+                                                       + " setter method.");
+                    }
+                }
+
+                ENTITY_FIELD_MAPPINGS.put(entity, new AirtableEntityMappingData(preferredConstructor, id, properties));
+            }
+        }
+
+        return ENTITY_FIELD_MAPPINGS.get(entity);
+    }
+
+    /**
+     * <p>
+     * Gets field mappings for an Airtable entity.
+     * </p>
+     *
+     * <pre>{@code
+     * For example, consider an Airtable table named {@code Pets} having fields
+     * named "Pet Name", "Pet Type" and "Age in Years", respectively (without
+     * quotes). Data from this table is returned by Airtable as follows:
+     *
+     * {
+     *     "records": [{
+     *         "id": "igsa31vhsj",
+     *         "fields: {
+     *             "Pet Name": "Alice",
+     *             "Pet Type": "Cat",
+     *             "Age in Years": 1
+     *         }
+     *     },
+     *     {
+     *         "id": "rir66h46e9",
+     *         "fields: {
+     *             "Pet Name": "Bob",
+     *             "Pet Type": "Dog",
+     *             "Age in Years": 2
+     *          }]
+     *     }]
+     * }
+     *
+     * Also consider the following Java class that should be mapped to this
+     * table:
+     *
+     * @Table(name = "Pets")
+     * class Pet {
+     *     @Field(name = "Pet Name")
+     *     private String name;
+     *
+     *     @Field(name = "Pet Type")
+     *     private PetType type;
+     *
+     *     @Field(name = "Age in Years")
+     *     private int age;
+     * }
+     *
+     * As evident, the class has properties named "name", "type" and "age"
+     * (without quotes) that do not match the field names in the table. This
+     * discrepancy is addressed by annotating each Java field with the
+     * @Field annotation and specifying the name of the field in the Airtable
+     * table.</pre>
+     *
+     * <p>
+     * This method maps the Airtable field names to the correct Java properties
+     * so that data can be copied from an Airtable API response to a Java
+     * object. For the example Airtable table and Java class above, this method
+     * will return the following mappings:
+     * </p>
+     *
+     * <pre>{@code
+     * {
+     *     "Pet Name": "name",
+     *     "Pet Type": "type",
+     *     "Age in Years": "age"
+     * }
+     * }
+     * </pre>
+     *
+     * @param entity The entity type for which field mappings are required.
+     *
+     * @return Field mappings for the entity type.
+     */
+    private <T> Map<String, AirtablePersistentProperty> getPersistentProperties(final AirtablePersistentEntity<T> entity) {
+        // Find mapped properties for the entity type.
+        final var properties = entity.getPersistentProperties(Field.class);
+
+        if (!properties.iterator().hasNext()) {
+            // No field mappings found for the entity.
+            return null;
+        }
+
+        final Map<String, AirtablePersistentProperty> mappings = new HashMap<>();
+
+        for (final var property : properties) {
+            mappings.put(property.getFieldName(), property);
+        }
+
+        return mappings;
     }
 
     /**
@@ -424,5 +713,58 @@ public final class AirtableTemplate implements AirtableOperations {
         @Override
         public void close() {
         }
+    }
+}
+
+/**
+ * Mapping metadata for an entity mapped to an Airtable table.
+ */
+class AirtableEntityMappingData {
+    private final Map<String, AirtablePersistentProperty> fieldMappings;
+
+    private final AirtablePersistentProperty idProperty;
+
+    private final PreferredConstructor<?, ?> preferredConstructor;
+
+    /**
+     * Creates metadata for a persistent entity.
+     *
+     * @param preferredConstructor Preferred constructor method for the entity.
+     * @param idProperty The identifier property for the entity.
+     * @param fieldMappings Field mappings for the entity.
+     */
+    AirtableEntityMappingData(final PreferredConstructor<?, ?> preferredConstructor
+        , final AirtablePersistentProperty idProperty
+        , final Map<String, AirtablePersistentProperty> fieldMappings) {
+        this.fieldMappings = fieldMappings;
+        this.idProperty = idProperty;
+        this.preferredConstructor = preferredConstructor;
+    }
+
+    /**
+     * Gets field mappings for the entity.
+     *
+     * @return Field mappings for the entity.
+     */
+    public Map<String, AirtablePersistentProperty> getFieldMappings() {
+        return fieldMappings;
+    }
+
+    /**
+     * Gets identifier property for the entity.
+     *
+     * @return Identifier property for the entity.
+     */
+    public AirtablePersistentProperty getIdProperty() {
+        return idProperty;
+    }
+
+    /**
+     * Gets the preferred constructor method for the entity.
+     *
+     * @return The preferred constructor method for the entity.
+     */
+    public PreferredConstructor<?, ?> getPreferredConstructor() {
+        return preferredConstructor;
     }
 }

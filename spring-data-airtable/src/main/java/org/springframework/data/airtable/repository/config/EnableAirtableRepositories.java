@@ -16,9 +16,11 @@
 
 package org.springframework.data.airtable.repository.config;
 
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
-
-import org.springframework.data.airtable.core.AirtableTemplate;
+import org.springframework.data.airtable.repository.support.AirtableRepositoryFactoryBean;
+import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
 
 import java.lang.annotation.*;
 
@@ -32,30 +34,105 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 public @interface EnableAirtableRepositories {
     /**
-     * Base packages to scan for annotated components. Use
-     * {@link #basePackageClasses()} for a type-safe alternative to string-based
-     * package names.
+     * <p>
+     * Configures the name of the Airtable client bean definition to use for
+     * creating repositories. The Spring context must have a bean of this name
+     * for Airtable repositories to be initialized successfully.
+     * </p>
+     *
+     * <pre>{@code
+     * Example
+     * -------------------------------------------------------------------------
+     * @Configuration
+     * class AirtableConfig {
+     *     @Bean(name = "airtableOperations")
+     *     AirtableOperations airtableOperations() {
+     *         ...
+     *     }
+     * }
+     * }</pre>
+     *
+     * <p>
+     * Defaults to {@code airtableOperations}.
+     * </p>
      */
-    String[] basePackages() default {};
+    String airtableOperations() default "airtableOperations";
 
     /**
      * Type-safe alternative to {@link #basePackages()} for specifying the
      * packages to scan for annotated components. The package of each class
-     * specified will be scanned. Consider creating a special no-op marker
-     * class or interface in each package that serves no purpose other than
+     * specified will be scanned. Consider creating a special no-op marker class
+     * or interface in each package that serves no purpose other than
      * being referenced by this attribute.
      */
     Class<?>[] basePackageClasses() default {};
 
     /**
+     * Base packages to scan for annotated components. Use
+     * {@link #basePackageClasses()} for a type-safe alternative to
+     * string-based package names.
+     */
+    String[] basePackages() default {};
+
+    /**
+     * Specifies which types are not eligible for component scanning.
+     */
+    ComponentScan.Filter[] excludeFilters() default {};
+
+    /**
+     * Specifies which types are eligible for component scanning. Further
+     * narrows the set of candidate components from everything in
+     * {@link #basePackages()} to everything in the base packages that matches
+     * the given filter or
+     * filters.
+     */
+    ComponentScan.Filter[] includeFilters() default {};
+
+    /**
+     * Configures the location of where to find the Spring Data named queries
+     * properties file.
+     */
+    String namedQueriesLocation() default "";
+
+    /**
      * <p>
-     * Name of the {@link AirtableTemplate} bean definition to use for
-     * creating repositories.
+     * Configure the repository base class to use to create repository proxies
+     * for this particular configuration.
+     * </p>
+     * <p>
+     * Default is {@link DefaultRepositoryBaseClass}.
+     * </p>
+     */
+    Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
+
+    /**
+     * <p>
+     * Configures the {@link FactoryBean} class to use for each repository
+     * instance.
      * </p>
      *
      * <p>
-     * Defaults to {@code airtableTemplate}.
+     * Defaults to {@link AirtableRepositoryFactoryBean}.
      * </p>
      */
-    String airtableTemplate() default "airtableTemplate";
+    Class<?> repositoryFactoryBeanClass() default AirtableRepositoryFactoryBean.class;
+
+    /**
+     * <p>
+     * Configures the suffix to use when looking up custom repository
+     * implementations.
+     * </p>
+     * <p>
+     * <p>
+     * Defaults to {@literal Impl}. So for a repository named
+     * {@code PersonRepository} the corresponding implementation class will be
+     * looked up scanning for {@code PersonRepositoryImpl}.
+     * </p>
+     */
+    String repositoryImplementationPostfix() default "Impl";
+
+    /**
+     * Alias for {@link #basePackages()} attribute.
+     */
+    String[] value() default {};
 }

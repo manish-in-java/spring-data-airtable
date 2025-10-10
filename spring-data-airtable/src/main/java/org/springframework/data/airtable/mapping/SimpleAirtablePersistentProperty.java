@@ -28,7 +28,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 class SimpleAirtablePersistentProperty
     extends AnnotationBasedPersistentProperty<AirtablePersistentProperty>
     implements AirtablePersistentProperty {
-    private final String columnName;
+    private final String fieldName;
 
     /**
      * Creates metadata for a persistent property.
@@ -46,15 +46,15 @@ class SimpleAirtablePersistentProperty
         , final SimpleTypeHolder simpleTypeHolder) {
         super(property, owner, simpleTypeHolder);
 
-        this.columnName = extractColumnName(property);
+        this.fieldName = extractFieldName(property);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getColumnName() {
-        return  columnName;
+    public String getFieldName() {
+        return fieldName;
     }
 
     /**
@@ -67,36 +67,36 @@ class SimpleAirtablePersistentProperty
 
     /**
      * <p>
-     * Derives the name of the Airtable table column to which the property
+     * Derives the name of the Airtable table field to which the property
      * must be persisted.
      * </p>
      *
      * <ul>
-     *      <li>First, the {@link Column} annotation on the property is checked
-     *      to see if {@link Column#name()} has been specified. If yes, the
+     *      <li>First, the {@link Field} annotation on the property is checked
+     *      to see if {@link Field#name()} has been specified. If yes, the
      *      specified name is used.</li>
      *      <li>If the name has not been specified, the simple name of the
-     *      property is used. For example, the column name for an entity field
+     *      property is used. For example, the field name for an entity field
      *      named {@code name} will be considered to be {@code name}
      *      (all lowercase).</li>
      * </ul>
      *
-     * @param property Metadata about the property for which the column name is
+     * @param property Metadata about the property for which the field name is
      * required.
      *
-     * @return The name of the Airtable column to which the property must be
+     * @return The name of the Airtable field to which the property must be
      * persisted.
      */
-    private String extractColumnName(final Property property) {
-        final var column = getField().getAnnotation(Column.class);
+    private String extractFieldName(final Property property) {
+        final var field = getField().getAnnotation(Field.class);
 
-        if (column == null) {
+        if (field == null) {
             return null;
         }
 
-        return !column.name().isBlank()
-               // Return the column specified through the annotation.
-               ? column.name().trim()
+        return !field.name().isBlank()
+               // Return the field specified through the annotation.
+               ? field.name().trim()
                // Otherwise, return the property name.
                : property.getName();
     }

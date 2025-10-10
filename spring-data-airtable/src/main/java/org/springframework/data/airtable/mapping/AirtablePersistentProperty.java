@@ -23,11 +23,11 @@ import org.springframework.data.mapping.PersistentProperty;
  */
 public interface AirtablePersistentProperty extends PersistentProperty<AirtablePersistentProperty> {
     /**
-     * Gets the name of the Airtable column to which property value should be
+     * Gets the name of the Airtable field to which property value should be
      * persisted.
      *
-     * @return The name of the Airtable table to which property value should be
+     * @return The name of the Airtable field to which property value should be
      * persisted.
      */
-    String getColumnName();
+    String getFieldName();
 }

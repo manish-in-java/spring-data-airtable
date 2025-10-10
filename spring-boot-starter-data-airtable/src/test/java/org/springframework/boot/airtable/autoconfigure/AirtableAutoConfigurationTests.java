@@ -3,7 +3,7 @@ package org.springframework.boot.airtable.autoconfigure;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.airtable.core.AirtableSettings;
+import org.springframework.data.airtable.core.AirtableTemplate;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest
 public class AirtableAutoConfigurationTests {
     @Autowired
-    private AirtableSettings connection;
+    private AirtableTemplate template;
 
     @Autowired
     private AirtableAutoConfiguration subject;
@@ -28,14 +28,11 @@ public class AirtableAutoConfigurationTests {
     }
 
     /**
-     * Tests that Airtable settings are configured automatically if the relevant
-     * details are included in the Spring Boot application configuration file.
+     * Tests that an Airtable template is configured automatically if the
+     * relevant details are included in the Spring Boot application configuration file.
      */
     @Test
-    public void settingsAvailable() {
-        assertNotNull(connection);
-
-        System.out.println(connection.getBaseId());
-        System.out.println(connection.getAccessToken());
+    public void templateAvailable() {
+        assertNotNull(template);
     }
 }

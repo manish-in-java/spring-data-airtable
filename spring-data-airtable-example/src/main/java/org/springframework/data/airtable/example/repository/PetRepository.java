@@ -14,29 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.domain;
+package org.springframework.data.airtable.example.repository;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Collections;
-import java.util.List;
+import org.springframework.data.airtable.example.entity.Pet;
+import org.springframework.data.airtable.repository.AirtableRepository;
 
 /**
- * Response from the Airtable List Records API.
+ * Repository for {@link Pet}s.
  */
-public class ListRecordsResponse {
-    @JsonProperty
-    private String offset;
-
-    @JsonProperty
-    private List<Record> records;
-
-    /**
-     * Gets records received from Airtable.
-     *
-     * @return Records received from Airtable.
-     */
-    public List<Record> getRecords() {
-        return records != null ? Collections.unmodifiableList(records) : Collections.emptyList();
-    }
+public interface PetRepository extends AirtableRepository<Pet> {
 }

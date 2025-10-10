@@ -14,29 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.data.airtable.domain;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Collections;
-import java.util.List;
+package org.springframework.data.airtable.example.type;
 
 /**
- * Response from the Airtable List Records API.
+ * A type of pet.
  */
-public class ListRecordsResponse {
-    @JsonProperty
-    private String offset;
-
-    @JsonProperty
-    private List<Record> records;
-
-    /**
-     * Gets records received from Airtable.
-     *
-     * @return Records received from Airtable.
-     */
-    public List<Record> getRecords() {
-        return records != null ? Collections.unmodifiableList(records) : Collections.emptyList();
-    }
+public enum PetType {
+    Cat, Dog, Hamster, Horse, Rooster
 }

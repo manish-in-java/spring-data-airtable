@@ -33,7 +33,7 @@
             </plugin>
 
             <!--
-                Provides code coverage while running tests.
+                Provides code coverage for tests.
             -->
             <plugin>
                 <groupId>org.jacoco</groupId>

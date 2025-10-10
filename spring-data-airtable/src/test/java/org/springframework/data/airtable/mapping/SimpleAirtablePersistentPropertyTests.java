@@ -58,11 +58,11 @@ public class SimpleAirtablePersistentPropertyTests {
     }
 
     /**
-     * Tests that column metadata can be determined for a property.
+     * Tests that field metadata can be determined for a property.
      */
     @Test
-    public void testGetColumn() {
-        assertNotNull(getProperty().getColumnName());
+    public void testGetFieldName() {
+        assertNotNull(getProperty().getFieldName());
     }
 
     /**
